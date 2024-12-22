@@ -1,33 +1,86 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useContext, useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { LuMessageCircleCode } from 'react-icons/lu';
+import toast from 'react-hot-toast';
+import UserContext from '../../context/UserContext';
+import { useMutation } from '@tanstack/react-query';
+import { register } from '../../api/auth';
+import { jwtDecode } from 'jwt-decode';
 
 const Register = () => {
+  const [registerData, setRegisterData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  const { setUser } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  const { mutate } = useMutation({
+    mutationKey: ['REGISTER'],
+    mutationFn: () => register(registerData),
+    onSuccess: (response) => {
+      const decoded = jwtDecode(response.token);
+      setUser({ isUser: true, userId: decoded._id });
+      navigate('/home');
+      toast.success(`Thank you for registering ${registerData.firstName}`);
+    },
+    onError: (error) => {
+      toast.error(`${error.response.data}`);
+    },
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setRegisterData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  const handleFormSubmmit = (e) => {
+    e.preventDefault();
+    if (registerData.confirmPassword !== registerData.password) {
+      return toast.error('Please confirm your password');
+    } else {
+      mutate();
+    }
+  };
   return (
-    <div className="w-full min-h-screen bg-gradient-to-tr from-zinc-900 via-zinc-800 to-cyan-900 flex justify-center items-center px-4">
-      <form className="w-full md:max-w-md h-fit bg-black bg-opacity-40 rounded-lg shadow-lg p-8 md:p-10 flex flex-col justify-center font-roboto gap-2">
+    <div className="flex items-center justify-center w-full min-h-screen px-4 bg-gradient-to-tr from-zinc-900 via-zinc-800 to-cyan-900">
+      <form
+        onSubmit={handleFormSubmmit}
+        className="flex flex-col justify-center w-full gap-2 p-8 bg-black rounded-lg shadow-lg md:max-w-md h-fit bg-opacity-40 md:p-10 font-roboto"
+      >
         {/* Logo Section */}
         <div className="flex items-center justify-center mb-8 space-x-2">
           <LuMessageCircleCode size={42} className="text-cyan-500" />
-          <h1 className="text-4xl font-bold text-cyan-500 tracking-wider italic">
+          <h1 className="text-4xl italic font-bold tracking-wider text-cyan-500">
             Wazzup
           </h1>
         </div>
 
         {/* Title & Description */}
-        <h2 className="text-xl font-bold text-white text-center">Register</h2>
+        <h2 className="text-xl font-bold text-center text-white">Register</h2>
         <p className="mt-2 mb-6 text-sm text-center text-gray-400">
           Join Wazzup and connect with your friends instantly.
         </p>
 
         {/* Form Fields */}
         <div className="space-y-5 text-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <label className="block">
               <span className="text-gray-200">First Name</span>
               <input
                 type="text"
-                className="w-full mt-1 p-2 rounded-md bg-gray-800 text-white focus:outline-none focus:ring focus:ring-cyan-500"
+                required
+                name="firstName"
+                value={registerData.firstName}
+                onChange={handleChange}
+                className="w-full p-2 mt-1 text-white bg-gray-800 rounded-md focus:outline-none focus:ring focus:ring-cyan-500"
                 placeholder="Enter your first name"
               />
             </label>
@@ -36,7 +89,11 @@ const Register = () => {
               <span className="text-gray-200">Last Name</span>
               <input
                 type="text"
-                className="w-full mt-1 p-2 rounded-md bg-gray-800 text-white focus:outline-none focus:ring focus:ring-cyan-500"
+                required
+                name="lastName"
+                value={registerData.lastName}
+                onChange={handleChange}
+                className="w-full p-2 mt-1 text-white bg-gray-800 rounded-md focus:outline-none focus:ring focus:ring-cyan-500"
                 placeholder="Enter your last name"
               />
             </label>
@@ -45,8 +102,12 @@ const Register = () => {
           <label className="block">
             <span className="text-gray-200">Email</span>
             <input
-              type="text"
-              className="w-full mt-1 p-2 rounded-md bg-gray-800 text-white focus:outline-none focus:ring focus:ring-cyan-500"
+              type="email"
+              required
+              name="email"
+              value={registerData.email}
+              onChange={handleChange}
+              className="w-full p-2 mt-1 text-white bg-gray-800 rounded-md focus:outline-none focus:ring focus:ring-cyan-500"
               placeholder="Enter your email"
             />
           </label>
@@ -55,7 +116,11 @@ const Register = () => {
             <span className="text-gray-200">Password</span>
             <input
               type="password"
-              className="w-full mt-1 p-2 rounded-md bg-gray-800 text-white focus:outline-none focus:ring focus:ring-cyan-500"
+              required
+              name="password"
+              value={registerData.password}
+              onChange={handleChange}
+              className="w-full p-2 mt-1 text-white bg-gray-800 rounded-md focus:outline-none focus:ring focus:ring-cyan-500"
               placeholder="Enter your password"
             />
           </label>
@@ -64,7 +129,11 @@ const Register = () => {
             <span className="text-gray-200">Confirm Password</span>
             <input
               type="password"
-              className="w-full mt-1 p-2 rounded-md bg-gray-800 text-white focus:outline-none focus:ring focus:ring-cyan-500"
+              name="confirmPassword"
+              required
+              value={registerData.confirmPassword}
+              onChange={handleChange}
+              className="w-full p-2 mt-1 text-white bg-gray-800 rounded-md focus:outline-none focus:ring focus:ring-cyan-500"
               placeholder="Confirm your password"
             />
           </label>
@@ -73,13 +142,13 @@ const Register = () => {
         {/* Submit Button */}
         <button
           type="submit"
-          className="w-full mt-6 p-3 text-white bg-cyan-700 rounded-md hover:bg-cyan-800 focus:outline-none"
+          className="w-full p-3 mt-6 text-white rounded-md bg-cyan-700 hover:bg-cyan-800 focus:outline-none"
         >
           Register
         </button>
 
         {/* Login Redirect */}
-        <p className="mt-4 text-sm text-gray-400 text-center">
+        <p className="mt-4 text-sm text-center text-gray-400">
           Already have an account?{' '}
           <NavLink to="/" className="text-cyan-500 hover:underline">
             Login

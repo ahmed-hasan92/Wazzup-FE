@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { TbUserSquareRounded } from 'react-icons/tb';
 import trachIcon from '../assets/trachIcon.svg';
 import messageIcon from '../assets/sendMessageIcon.svg';
-import searchUserIcon from '../assets/userSearchIcon.svg';
 
 const mockContacts = [
   {
@@ -41,8 +40,13 @@ const MyContacts = () => {
   const [contactModal, setContactModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [nameLabel, setNameLabel] = useState(false);
+
   const handleOpenContactModal = () => setContactModal(true);
   const handleCloseContactModal = () => setContactModal(false);
+  const handleShowNameLabel = () => {
+    setNameLabel((prev) => !prev);
+  };
 
   const filteredContacts = mockContacts.filter((contact) =>
     contact.name.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -52,11 +56,21 @@ const MyContacts = () => {
     <>
       <button
         onClick={handleOpenContactModal}
-        className="p-2 transition-transform duration-300 bg-gray-800 rounded-full text-gray-50 hover:bg-cyan-700 hover:scale-110 focus:outline-none"
+        onMouseEnter={handleShowNameLabel}
+        onMouseLeave={handleShowNameLabel}
+        className="relative p-2 transition-transform duration-300 bg-gray-800 rounded-full text-gray-50 hover:bg-cyan-700 hover:scale-110 focus:outline-none"
       >
         <TbUserSquareRounded size={22} />
       </button>
-
+      <span
+        className={`absolute w-fit h-fit p-2 bg-gray-800 rounded-md text-sm text-gray-50 font-poppins top-full transition-all transform opacity-0 scale-90 ${
+          nameLabel
+            ? 'block opacity-100 scale-100 duration-300 delay-200'
+            : 'hidden opacity-0 scale-90 duration-300 delay-0'
+        }`}
+      >
+        Contacts
+      </span>
       {contactModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center w-full h-full px-4 bg-black bg-opacity-50 font-poppins">
           <div className="relative w-full max-w-2xl p-6 bg-gray-900 rounded-md shadow-lg h-[70vh]">

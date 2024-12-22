@@ -3,60 +3,57 @@ import { BiSearchAlt } from 'react-icons/bi';
 import searchUserIcon from '../assets/userSearchIcon.svg';
 import messageIcon from '../assets/sendMessageIcon.svg';
 import addContactIcon from '../assets/addContactIcon.svg';
-
-const mockUsers = [
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    profileImage: 'https://randomuser.me/api/portraits/men/32.jpg',
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    profileImage: 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    id: 3,
-    name: 'Mike Ross',
-    email: 'mike.ross@example.com',
-    profileImage: 'https://randomuser.me/api/portraits/men/47.jpg',
-  },
-  {
-    id: 4,
-    name: 'Rachel Green',
-    email: 'rachel.green@example.com',
-    profileImage: 'https://randomuser.me/api/portraits/women/50.jpg',
-  },
-  {
-    id: 5,
-    name: 'Harvey Specter',
-    email: 'harvey.specter@example.com',
-    profileImage: 'https://randomuser.me/api/portraits/men/65.jpg',
-  },
-];
+import useProfile from '../hooks/useProfile';
+import defaultProfilePicture from '../assets/dpp.jpg';
+import { IMAGE_URL } from '../api';
+import useContact from '../hooks/useContact';
+import trachIcon from '../assets/trachIcon.svg';
 
 const SearchForUsers = () => {
   const [searchModal, setSearchModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [nameLabel, setNameLabel] = useState(false);
+
+  const { allProfiles, myProfile, isLoading } = useProfile();
+  const { addTo } = useContact();
+
+  const handleAddToContact = (userId) => {
+    addTo(userId);
+  };
 
   const handleOpenSearchModal = () => setSearchModal(true);
   const handleCloseSearchModal = () => setSearchModal(false);
+  const handleShowNameLabel = () => {
+    setNameLabel((prev) => !prev);
+  };
 
-  const filteredUsers = mockUsers.filter((user) =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredUsers = allProfiles?.filter((user) =>
+    `${user.firstName} ${user.lastName}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase()),
   );
-
+  if (isLoading) {
+    return null;
+  }
   return (
     <>
       <button
         onClick={handleOpenSearchModal}
-        className="p-2 transition-transform duration-300 bg-gray-800 rounded-full text-gray-50 hover:bg-cyan-700 hover:scale-110 focus:outline-none"
+        onMouseEnter={handleShowNameLabel}
+        onMouseLeave={handleShowNameLabel}
+        className="relative p-2 transition-transform duration-300 bg-gray-800 rounded-full text-gray-50 hover:bg-cyan-700 hover:scale-110 focus:outline-none"
       >
         <BiSearchAlt size={22} />
       </button>
-
+      <span
+        className={`absolute w-fit h-fit p-2 bg-gray-800 rounded-md text-sm text-gray-50 font-poppins top-full transition-all transform opacity-0 scale-90 right-36 ${
+          nameLabel
+            ? 'block opacity-100 scale-100 duration-300 delay-200'
+            : 'hidden opacity-0 scale-90 duration-300 delay-0'
+        }`}
+      >
+        Users search
+      </span>
       {searchModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center w-full h-full px-4 bg-black bg-opacity-50 font-poppins">
           <div className="relative w-full max-w-2xl p-6 bg-gray-900 rounded-md shadow-lg h-[70vh]">
@@ -70,7 +67,7 @@ const SearchForUsers = () => {
               <img
                 src={searchUserIcon}
                 alt="searchUserIcon"
-                className="w-6 h-6"
+                className="w-5 h-5"
               />
               <h2 className="text-[1rem] font-medium text-cyan-500">
                 Search Users
@@ -89,18 +86,22 @@ const SearchForUsers = () => {
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => (
                   <div
-                    key={user.id}
+                    key={user._id}
                     className="flex flex-col p-4 transition-transform duration-200 bg-gray-800 rounded-md md:flex-row md:items-center md:justify-between"
                   >
                     <div className="flex items-center gap-4">
                       <img
-                        src={user.profileImage}
-                        alt={user.name}
+                        src={
+                          user.image
+                            ? IMAGE_URL + user.image
+                            : defaultProfilePicture
+                        }
+                        alt={user.firstName}
                         className="w-12 h-12 rounded-full"
                       />
                       <div>
                         <p className="text-sm font-bold text-gray-100">
-                          {user.name}
+                          {user.firstName + ' ' + user.lastName}
                         </p>
                         <p className="text-xs text-gray-400">{user.email}</p>
                       </div>
@@ -115,14 +116,28 @@ const SearchForUsers = () => {
                           className="w-5 h-5"
                         />
                       </button>
-                      <button className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-white transition-transform rounded-lg bg-cyan-700 hover:bg-cyan-800">
-                        Add
-                        <img
-                          src={addContactIcon}
-                          alt="contactIcon"
-                          className="w-5 h-5"
-                        />
-                      </button>
+                      {!myProfile?.contacts?.includes(user._id) ? (
+                        <button
+                          onClick={() => handleAddToContact(user._id)}
+                          className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-white transition-transform rounded-lg bg-cyan-700 hover:bg-cyan-800"
+                        >
+                          Add
+                          <img
+                            src={addContactIcon}
+                            alt="contactIcon"
+                            className="w-5 h-5"
+                          />
+                        </button>
+                      ) : (
+                        <button className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-white transition-transform bg-red-700 rounded-lg hover:bg-red-800">
+                          Remove
+                          <img
+                            src={trachIcon}
+                            alt="trashIcon"
+                            className="w-5 h-5"
+                          />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))
