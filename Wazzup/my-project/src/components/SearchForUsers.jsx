@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { BiSearchAlt } from 'react-icons/bi';
 import searchUserIcon from '../assets/userSearchIcon.svg';
 import messageIcon from '../assets/sendMessageIcon.svg';
@@ -8,6 +8,7 @@ import defaultProfilePicture from '../assets/dpp.jpg';
 import { IMAGE_URL } from '../api';
 import useContact from '../hooks/useContact';
 import trachIcon from '../assets/trachIcon.svg';
+import useChatroom from '../hooks/useChatroom';
 
 const SearchForUsers = () => {
   const [searchModal, setSearchModal] = useState(false);
@@ -15,10 +16,20 @@ const SearchForUsers = () => {
   const [nameLabel, setNameLabel] = useState(false);
 
   const { allProfiles, myProfile, isLoading } = useProfile();
-  const { addTo } = useContact();
+  const { checkOrCreateRoom } = useChatroom();
+  const { addTo, removeFrom } = useContact();
 
   const handleAddToContact = (userId) => {
     addTo(userId);
+  };
+
+  const handleRemoveFromContact = (userId) => {
+    removeFrom(userId);
+  };
+
+  const handleCheckOrCreateChatroom = (otherParticipantId) => {
+    checkOrCreateRoom(otherParticipantId);
+    handleCloseSearchModal();
   };
 
   const handleOpenSearchModal = () => setSearchModal(true);
@@ -108,7 +119,10 @@ const SearchForUsers = () => {
                     </div>
 
                     <div className="flex flex-col gap-2 mt-4 md:mt-0 md:flex-row">
-                      <button className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-white transition-transform bg-green-700 rounded-lg hover:bg-green-800">
+                      <button
+                        onClick={() => handleCheckOrCreateChatroom(user._id)}
+                        className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-white transition-transform bg-green-700 rounded-lg hover:bg-green-800"
+                      >
                         Message
                         <img
                           src={messageIcon}
@@ -129,7 +143,10 @@ const SearchForUsers = () => {
                           />
                         </button>
                       ) : (
-                        <button className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-white transition-transform bg-red-700 rounded-lg hover:bg-red-800">
+                        <button
+                          onClick={() => handleRemoveFromContact(user._id)}
+                          className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-white transition-transform bg-red-700 rounded-lg hover:bg-red-800"
+                        >
                           Remove
                           <img
                             src={trachIcon}

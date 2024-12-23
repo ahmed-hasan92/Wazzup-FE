@@ -6,11 +6,16 @@ import Home from './pages/home/Home';
 import { useEffect, useState } from 'react';
 import { checkToken } from './api/auth';
 import UserContext from './context/UserContext';
+import ChatroomContext from './context/ChatroomContext';
 
 function App() {
   const [user, setUser] = useState({
     isUser: false,
     userId: null,
+  });
+
+  const [currentChatroom, setCurrentChatroom] = useState(() => {
+    return localStorage.getItem('currentChatroom') || null;
   });
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -23,6 +28,15 @@ function App() {
     }
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (currentChatroom) {
+      localStorage.setItem('currentChatroom', currentChatroom);
+    } else {
+      localStorage.removeItem('currentChatroom');
+    }
+  }, [currentChatroom]);
+
   if (loading) {
     return <div className="text-white">Loading...</div>;
   }
@@ -34,9 +48,13 @@ function App() {
         <Route
           path="/home"
           element={
-            <Layout>
-              <Home />
-            </Layout>
+            <ChatroomContext.Provider
+              value={{ currentChatroom, setCurrentChatroom }}
+            >
+              <Layout>
+                <Home />
+              </Layout>
+            </ChatroomContext.Provider>
           }
         />
       </Routes>

@@ -2,54 +2,39 @@ import React, { useState } from 'react';
 import { TbUserSquareRounded } from 'react-icons/tb';
 import trachIcon from '../assets/trachIcon.svg';
 import messageIcon from '../assets/sendMessageIcon.svg';
-
-const mockContacts = [
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    profileImage: 'https://randomuser.me/api/portraits/men/32.jpg',
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    profileImage: 'https://randomuser.me/api/portraits/women/44.jpg',
-  },
-  {
-    id: 3,
-    name: 'Mike Ross',
-    email: 'mike.ross@example.com',
-    profileImage: 'https://randomuser.me/api/portraits/men/47.jpg',
-  },
-  {
-    id: 4,
-    name: 'Rachel Green',
-    email: 'rachel.green@example.com',
-    profileImage: 'https://randomuser.me/api/portraits/women/50.jpg',
-  },
-  {
-    id: 5,
-    name: 'Harvey Specter',
-    email: 'harvey.specter@example.com',
-    profileImage: 'https://randomuser.me/api/portraits/men/65.jpg',
-  },
-];
+import useContact from '../hooks/useContact';
+import defaultProfilePicture from '../assets/dpp.jpg';
+import { IMAGE_URL } from '../api';
+import useChatroom from '../hooks/useChatroom';
 
 const MyContacts = () => {
   const [contactModal, setContactModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-
   const [nameLabel, setNameLabel] = useState(false);
+
+  const { removeFrom, myContacts } = useContact();
+  const { checkOrCreateRoom } = useChatroom();
 
   const handleOpenContactModal = () => setContactModal(true);
   const handleCloseContactModal = () => setContactModal(false);
+
   const handleShowNameLabel = () => {
     setNameLabel((prev) => !prev);
   };
 
-  const filteredContacts = mockContacts.filter((contact) =>
-    contact.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  const handleRemoveFromContacts = (userId) => {
+    removeFrom(userId);
+  };
+
+  const handleCheckOrCreateChatroom = (otherParticipantId) => {
+    checkOrCreateRoom(otherParticipantId);
+    handleCloseContactModal();
+  };
+
+  const filteredContacts = myContacts?.filter((contact) =>
+    `${contact.firstName} ${contact.lastName}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -98,28 +83,39 @@ const MyContacts = () => {
 
             {/* Scrollable Contact List */}
             <div className="h-[calc(100%-8rem)] overflow-y-auto space-y-4 mt-2 custom-scroll">
-              {filteredContacts.length > 0 ? (
+              {myContacts?.length === 0 ? (
+                <p className="text-center text-gray-400">
+                  No contacts available.
+                </p>
+              ) : filteredContacts?.length > 0 ? (
                 filteredContacts.map((contact) => (
                   <div
-                    key={contact.id}
+                    key={contact._id}
                     className="flex flex-col p-4 transition-transform duration-200 bg-gray-800 rounded-md md:flex-row md:items-center md:justify-between"
                   >
                     <div className="flex items-center gap-4">
                       <img
-                        src={contact.profileImage}
-                        alt={contact.name}
+                        src={
+                          contact.image
+                            ? IMAGE_URL + contact.image
+                            : defaultProfilePicture
+                        }
+                        alt={contact.firstName}
                         className="w-12 h-12 rounded-full"
                       />
                       <div>
                         <p className="text-sm font-bold text-gray-100">
-                          {contact.name}
+                          {contact.firstName + ' ' + contact.lastName}
                         </p>
                         <p className="text-xs text-gray-400">{contact.email}</p>
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-2 mt-4 md:mt-0 md:flex-row">
-                      <button className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-white transition-transform bg-green-700 rounded-lg hover:bg-green-800">
+                      <button
+                        onClick={() => handleCheckOrCreateChatroom(contact._id)}
+                        className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-white transition-transform bg-green-700 rounded-lg hover:bg-green-800"
+                      >
                         Message
                         <img
                           src={messageIcon}
@@ -127,7 +123,10 @@ const MyContacts = () => {
                           className="w-5 h-5"
                         />
                       </button>
-                      <button className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-white transition-transform bg-red-700 rounded-lg hover:bg-red-800">
+                      <button
+                        onClick={() => handleRemoveFromContacts(contact._id)}
+                        className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-white transition-transform bg-red-700 rounded-lg hover:bg-red-800"
+                      >
                         Remove
                         <img
                           src={trachIcon}

@@ -5,9 +5,11 @@ import UserContext from '../context/UserContext';
 import useProfile from '../hooks/useProfile';
 import defaultProfilePicture from '../assets/dpp.jpg';
 import { IMAGE_URL } from '../api';
+import ChatroomContext from '../context/ChatroomContext';
 const AvatarList = () => {
   const [isListOpen, setIsListOpen] = useState(false);
   const { setUser } = useContext(UserContext);
+  const { setCurrentChatroom } = useContext(ChatroomContext);
   const navigate = useNavigate();
   const { myProfile, isLoading } = useProfile();
 
@@ -17,7 +19,9 @@ const AvatarList = () => {
 
   const handleLogOut = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('currentChatroom');
     setUser({ isUser: false, userId: null });
+    setCurrentChatroom(null);
     navigate('/');
   };
   if (isLoading) {
@@ -64,14 +68,12 @@ const AvatarList = () => {
               My profile
             </NavLink>
           </div>
-          <div className="w-full py-1 mt-1 h-fit">
-            <button
-              onClick={handleLogOut}
-              className="text-sm tracking-wide text-gray-50 hover:text-red-500 hover:font-semibold"
-            >
-              LogOut
-            </button>
-          </div>
+          <button
+            onClick={handleLogOut}
+            className="mt-1 text-sm tracking-wide text-gray-50 hover:text-red-500 hover:font-semibold"
+          >
+            LogOut
+          </button>
         </motion.div>
       )}
     </>
