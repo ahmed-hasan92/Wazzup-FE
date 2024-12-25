@@ -6,9 +6,10 @@ import useProfile from '../hooks/useProfile';
 import defaultProfilePicture from '../assets/dpp.jpg';
 import { IMAGE_URL } from '../api';
 import ChatroomContext from '../context/ChatroomContext';
+import { socket } from '../api/socket';
 const AvatarList = () => {
   const [isListOpen, setIsListOpen] = useState(false);
-  const { setUser } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   const { setCurrentChatroom } = useContext(ChatroomContext);
   const navigate = useNavigate();
   const { myProfile, isLoading } = useProfile();
@@ -18,6 +19,10 @@ const AvatarList = () => {
   };
 
   const handleLogOut = () => {
+    if (user?.userId) {
+      // Notify the server about the user logging out
+      socket.emit('user_disconnected', user.userId);
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('currentChatroom');
     setUser({ isUser: false, userId: null });

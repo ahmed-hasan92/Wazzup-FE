@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { BiSearchAlt } from 'react-icons/bi';
 import searchUserIcon from '../assets/userSearchIcon.svg';
 import messageIcon from '../assets/sendMessageIcon.svg';
@@ -38,14 +38,17 @@ const SearchForUsers = () => {
     setNameLabel((prev) => !prev);
   };
 
-  const filteredUsers = allProfiles?.filter((user) =>
-    `${user.firstName} ${user.lastName}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase()),
-  );
+  const filteredUsers =
+    allProfiles?.filter((user) =>
+      `${user.firstName} ${user.lastName}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()),
+    ) || [];
+
   if (isLoading) {
     return null;
   }
+
   return (
     <>
       <button

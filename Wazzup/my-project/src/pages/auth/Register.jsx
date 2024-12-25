@@ -6,6 +6,7 @@ import UserContext from '../../context/UserContext';
 import { useMutation } from '@tanstack/react-query';
 import { register } from '../../api/auth';
 import { jwtDecode } from 'jwt-decode';
+import { socket } from '../../api/socket';
 
 const Register = () => {
   const [registerData, setRegisterData] = useState({
@@ -25,6 +26,7 @@ const Register = () => {
     onSuccess: (response) => {
       const decoded = jwtDecode(response.token);
       setUser({ isUser: true, userId: decoded._id });
+      socket.emit('user_connected', decoded._id);
       navigate('/home');
       toast.success(`Thank you for registering ${registerData.firstName}`);
     },

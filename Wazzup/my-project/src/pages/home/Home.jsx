@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import sendIcon from '../../assets/sendIcon.svg';
 import attatchIcon from '../../assets/attachIcon.svg';
 import ChatArea from '../../components/ChatArea';
@@ -8,9 +8,11 @@ import placholderVid from '../../assets/placeHolderVid.mp4';
 import defaultProfilePicture from '../../assets/dpp.jpg';
 import useMessage from '../../hooks/useMessage';
 import toast from 'react-hot-toast';
+import { socket } from '../../api/socket';
 
 const Home = () => {
   const [messageContent, setMessageContent] = useState('');
+  const [isOnline, setIsOnline] = useState(false); // Track online status
   const { oneRoom, isLoading } = useChatroom();
 
   const { sendMessage } = useMessage();
@@ -28,6 +30,30 @@ const Home = () => {
     sendMessage({ receiverId: otherParticipant._id, content: messageContent });
     setMessageContent(''); // Clear input after sending
   };
+
+  useEffect(() => {
+    if (!oneRoom) return;
+
+    const otherParticipantId = oneRoom.participants?.[0]?._id;
+
+    // Listen for user_status_update events
+    const handleStatusUpdate = ({ userId, status }) => {
+      if (userId === otherParticipantId) {
+        setIsOnline(status === 'online');
+      }
+    };
+
+    socket.on('user_status_update', handleStatusUpdate);
+
+    // Check initial status
+    socket.emit('check_user_status', otherParticipantId, (response) => {
+      setIsOnline(response.status === 'online');
+    });
+
+    return () => {
+      socket.off('user_status_update', handleStatusUpdate);
+    };
+  }, [oneRoom]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -81,7 +107,13 @@ const Home = () => {
           <p className="text-sm font-medium text-gray-50">
             {otherParticipant?.firstName} {otherParticipant?.lastName}
           </p>
-          <p className="text-[0.8rem] font-medium text-green-600">Online</p>
+          <p
+            className={`text-[0.8rem] font-medium ${
+              isOnline ? 'text-green-600' : 'text-gray-500'
+            }`}
+          >
+            {isOnline ? 'Online' : 'Offline'}
+          </p>
         </div>
       </div>
 

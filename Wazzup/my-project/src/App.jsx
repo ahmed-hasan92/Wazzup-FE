@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { checkToken } from './api/auth';
 import UserContext from './context/UserContext';
 import ChatroomContext from './context/ChatroomContext';
+import { socket } from './api/socket';
 
 function App() {
   const [user, setUser] = useState({
@@ -23,6 +24,7 @@ function App() {
 
     if (validToken) {
       setUser({ isUser: true, userId: validToken._id });
+      socket.emit('user_connected', validToken._id);
     } else {
       setUser({ isUser: false, userId: null });
     }
@@ -32,6 +34,10 @@ function App() {
   useEffect(() => {
     if (currentChatroom) {
       localStorage.setItem('currentChatroom', currentChatroom);
+
+      // Emit the `join_room` event whenever currentChatroom changes
+      socket.emit('join_room', currentChatroom);
+      console.log(`Joined chatroom: ${currentChatroom}`);
     } else {
       localStorage.removeItem('currentChatroom');
     }

@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { newMessage } from '../api/message';
 import toast from 'react-hot-toast';
+import { useEffect } from 'react';
+import { socket } from '../api/socket';
 
 const useMessage = () => {
   const query = useQueryClient();
@@ -16,6 +18,18 @@ const useMessage = () => {
     },
   });
 
+  useEffect(() => {
+    // Listen for real-time message updates
+    socket.on('receive_message', (data) => {
+      const { chatroomId } = data;
+      query.invalidateQueries(['ONE_ROOM', chatroomId]);
+    });
+
+    // Cleanup listener on component unmount
+    return () => {
+      socket.off('receive_message');
+    };
+  }, [query]);
   return { sendMessage };
 };
 

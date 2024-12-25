@@ -4,7 +4,6 @@ import moment from 'moment';
 
 const ChatArea = (messages) => {
   const { user } = useContext(UserContext);
-  console.log(messages);
 
   return (
     <div className="flex flex-col w-full h-full gap-4 px-4 py-8 font-poppins">

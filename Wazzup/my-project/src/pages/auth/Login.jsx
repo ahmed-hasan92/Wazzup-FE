@@ -6,6 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { login } from '../../api/auth';
 import toast from 'react-hot-toast';
 import { jwtDecode } from 'jwt-decode';
+import { socket } from '../../api/socket';
 
 const Login = () => {
   const [loginData, setLoginData] = useState({
@@ -21,6 +22,7 @@ const Login = () => {
     onSuccess: (response) => {
       const decoded = jwtDecode(response.token);
       setUser({ isUser: true, userId: decoded._id });
+      socket.emit('user_connected', decoded._id);
       toast.success('Welcome back');
       navigate('/home');
     },
